@@ -289,3 +289,66 @@ const Post *ISRContainer::Next( )
    }
 
 
+// ISRAnd
+
+const Post *ISRAnd::Seek( Location target )
+   {
+   // Seek all the ISRs to the first occurrence beginning at the target location.
+   for ( int i = 0; i < NumberOfTerms; i ++ )
+      {
+      const Post *result = Terms[ i ]->Seek( target );  
+      if ( result == nullptr )
+         return nullptr;  // if any ISR reaches the end, there is no match
+      // update nearest and farthest terms
+      Location loc = Terms[ i ]->GetStartLocation();  
+      if ( loc < nearestStartLocation )
+         {
+         nearestTerm = i;  
+         nearestStartLocation = loc;  
+         }
+      if ( loc > farthestStartLocation )
+         {
+         farthestTerm = i;  
+         farthestStartLocation = loc;  
+         }
+      }
+
+   Location docEnd, docBegin;  
+
+   while ( true )
+      {
+      // move the document end ISR to just past the farthest word ISR
+      const Post *result = EndDoc->Seek( Terms[ farthestTerm ]->GetStartLocation( ) + 1 );  
+      if ( result == nullptr )
+         return nullptr;  // if any ISR reaches the end, there is no match
+      
+      // calculate document begin location
+      docEnd = EndDoc->GetStartLocation( );  
+      docBegin = docEnd - EndDoc->GetDocumentLength( );  
+   
+      // seek all the other terms to past the document begin
+      bool allWithinDoc = true;
+      for ( int i = 0; i < NumberOfTerms; i ++ )
+         {
+         const Post *result = Terms[ i ]->Seek( docBegin );  
+         if ( result == nullptr )
+            return nullptr;  // if any ISR reaches the end, there is no match
+
+         if ( Terms[ i ]->GetStartLocation() > docEnd )
+            allWithinDoc = false;  // not in this document
+         }
+
+      // if all ISRs within the document, break the loop
+      if ( allWithinDoc )
+         break;
+      }
+
+   // find document
+   matchingDocument = EndDoc->GetMatchingDoc();
+   return Terms[0]->GetCurrentPost();  // return something, not nullptr
+   }
+
+const Post *ISRAnd::Next()
+   {
+   return Seek( nearestStartLocation + 1 );  
+   }

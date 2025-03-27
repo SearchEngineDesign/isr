@@ -81,16 +81,15 @@ class ISRAnd : public ISR
 {
 public:
    ISR **Terms;
-   unsigned NumberOfTerms;
-   Post *Seek(Location target);
-   Post *Next()
-   {
-      return Seek(nearestStartLocation + 1);
-   }
+   unsigned int NumberOfTerms;
+   const Post *Seek(Location target);
+   const Post *Next();
+
+   ISREndDoc *EndDoc;
 
 private:
-   unsigned nearestTerm, farthestTerm;
-   Location nearestStartLocation, nearestEndLocation;
+   unsigned int nearestTerm = 0, farthestTerm = 0;
+   Location nearestStartLocation, farthestStartLocation;
 };
 
 class ISRPhrase : public ISR
