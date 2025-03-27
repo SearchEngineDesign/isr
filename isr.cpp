@@ -66,9 +66,16 @@ const Post *ISRWord::Seek ( Location target )
    // seek from synchronization point to target
    while ( actualLocation < target )
       {
-      actualLocation += GetCustomUtf8((*list)[offset+1].getData()); // TODO: unsigned char* and char*
-      offset ++;
-      // TODO: if exceed list, reach the end and no match, return nullptr
+      if ( offset + 1 < (*list).size() ) 
+         {
+         actualLocation += GetCustomUtf8((*list)[offset+1].getData()); // TODO: unsigned char* and char*
+         offset ++;
+         }
+      else
+         {
+         // reach the end and no match, return nullptr
+         return nullptr;
+         }
       }
 
    // update start location
