@@ -168,42 +168,45 @@ size_t ISREndDoc::GetUrlLength()
    }
 
 
+// ISRContainer
 
-ISRContainer::ISRContainer( unsigned int countContained, unsigned int countExcluded )
-   : CountContained( countContained ), CountExcluded( countExcluded )
-   {
-   // set ISR
-   if ( CountContained > 0 )
-      {
-      Contained = new ISR*[CountContained];  
-      for ( unsigned int i = 0; i < CountContained; i ++ )
-         Contained[ i ] = new ISR( );  
-      }
+// Do Open ISR in index ( including assign Contained and Excluded )
+
+// ISRContainer::ISRContainer( unsigned int countContained, unsigned int countExcluded )
+//    : CountContained( countContained ), CountExcluded( countExcluded )
+//    {
+//    // set ISR
+//    if ( CountContained > 0 )
+//       {
+//       Contained = new ISR*[CountContained];  
+//       for ( unsigned int i = 0; i < CountContained; i ++ )
+//          Contained[ i ] = new ISR( );  
+//       }
    
-   if ( CountExcluded > 0 )
-      {
-      Excluded = new ISR*[countExcluded];  
-      for ( unsigned int i = 0; i < countExcluded; i ++ )
-         Excluded[ i ] = new ISR( );  
-      }
+//    if ( CountExcluded > 0 )
+//       {
+//       Excluded = new ISR*[countExcluded];  
+//       for ( unsigned int i = 0; i < countExcluded; i ++ )
+//          Excluded[ i ] = new ISR( );  
+//       }
 
-   EndDoc = new ISREndDoc( );  
+//    EndDoc = new ISREndDoc( );  
 
-   }
+//    }
 
 
-ISRContainer::~ISRContainer( )
-   {
-   for ( int i = 0; i < CountContained; i ++ )
-      delete Contained[ i ];  
-   delete[ ] Contained;  
+// ISRContainer::~ISRContainer( )
+//    {
+//    for ( int i = 0; i < CountContained; i ++ )
+//       delete Contained[ i ];  
+//    delete[ ] Contained;  
 
-   for ( int i = 0; i < CountExcluded; i ++ )
-      delete Excluded[ i ];  
-   delete[ ] Excluded;  
+//    for ( int i = 0; i < CountExcluded; i ++ )
+//       delete Excluded[ i ];  
+//    delete[ ] Excluded;  
 
-   delete EndDoc;  
-   }
+//    delete EndDoc;  
+//    }
 
 
 const Post *ISRContainer::Seek( Location target )

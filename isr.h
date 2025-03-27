@@ -115,8 +115,10 @@ class ISRContainer : public ISR
 {
 public:
 
-   ISRContainer( unsigned int countContained, unsigned int countExcluded );  // TODO: think about init
-   ~ISRContainer( );  
+   // ISRContainer( unsigned int countContained, unsigned int countExcluded );  // TODO: think about init
+   // ~ISRContainer( );  
+
+   // TODO: open ISR function in index
 
    // Location Next( );
    const Post *Seek( Location target );
