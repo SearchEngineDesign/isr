@@ -87,7 +87,7 @@ const Post *ISRWord::Seek ( Location target )
    // update end of document
 
    if ( actualLocation > DocumentEnd->GetStartLocation( ) )
-      DocumentEnd->NextDocument();
+      DocumentEnd->Seek( actualLocation );
    
    matchingDocument = DocumentEnd->GetMatchingDoc();
 
