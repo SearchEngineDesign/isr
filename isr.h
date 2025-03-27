@@ -1,32 +1,27 @@
+#pragma once
 #include "../index/index.h"
-
-class Dictionary
-{
-public:
-   ISR *OpenIsr(char *token);
-   // The first line of index.txt, in order
-   size_t GetNumberOfWords();
-   size_t GetNumberOfUniqueWords(); // number of posting list
-   size_t GetNumberOfDocuments();
-
-private:
-   size_t numOfWords, numOfUniqueWords, numOfDocuments;
-   size_t SetNum(size_t numOfWords, size_t numOfUniqueWords, size_t numOfDocuments);
-};
 
 class ISR
 {
 public:
-   virtual Post *Next(); // -> 
-   virtual Post *NextDocument(); // -> return 
-   virtual Post *Seek(Location target); // -> return delta
-   virtual Location GetStartLocation(); // -> return start  
-   virtual Location GetEndLocation(); // -> return end
-   virtual size_t GetMatchingDoc(); // return result
+   virtual const Post *Next(); // -> 
+   virtual const Post *NextDocument(); // -> return 
+   virtual const Post *Seek(Location target); // -> return delta
+
+   Location GetStartLocation(); // -> return start
+   Location GetEndLocation(); // -> return end
+   size_t GetMatchingDoc(); // return result
+
+   unsigned GetDocumentCount();
+   unsigned GetNumberOfOccurrences();
+
+   const Post *GetCurrentPost();
+   void SetCurrentPost(Post *p);
+   void SetPostingList( PostingList *pl );
 
 protected:
    PostingList *postingList; 
-   Post *curr; // current post 
+   const Post *curr; // current post 
    Location start, end;
 
    size_t matchingDocument; // final result
@@ -35,24 +30,17 @@ protected:
 class ISREndDoc : public ISR
 {
 public:
-   Post *Seek(Location target); // -> return delta
-   Post *NextDocument(); // -> return 
-   Location GetStartLocation(); // -> return start
-   size_t GetMatchingDoc(); // return result  
-
-   unsigned GetDocumentCount();
-   virtual Post *GetCurrentPost();
-   void SetCurrentPost(Post *p);
-   void SetPostingList( PostingList *pl );
+   const Post *Seek(Location target); // -> return delta
+   const Post *NextDocument(); // -> return 
 
    // type-specific data
-   unsigned GetDocumentLength();
-   unsigned GetTitleLength();
-   unsigned GetUrlLength();
+   size_t GetDocumentLength();
+   size_t GetTitleLength();
+   size_t GetUrlLength();
 
-   unsigned SetDocumentLength(size_t length);
-   unsigned SetTitleLength(size_t length);
-   unsigned SetUrlLength(size_t length);
+   void SetDocumentLength(size_t length);
+   void SetTitleLength(size_t length);
+   void SetUrlLength(size_t length);
 
 private:
    size_t documentLength = 0, titleLength = 0, urlLength = 0;
@@ -63,19 +51,9 @@ private:
 class ISRWord : public ISR
 {
 public:
-   Post *Next(); // -> 
-   Post *NextDocument(); // -> return 
-   Post *Seek(Location target); // -> return delta
-   Location GetStartLocation(); // -> return start  
-   Location GetEndLocation(); // -> return end
-   size_t GetMatchingDoc(); // return result
-
-   unsigned GetDocumentCount();
-   unsigned GetNumberOfOccurrences();
-   virtual Post *GetCurrentPost();
-   void SetCurrentPost(Post *p);
-
-   void SetPostingList( PostingList *pl );
+   const Post *Next(); // -> 
+   const Post *NextDocument(); // -> return 
+   const Post *Seek(Location target); // -> return delta
 
 private:
    ISREndDoc *DocumentEnd;
@@ -141,8 +119,8 @@ public:
    ~ISRContainer( );  
 
    // Location Next( );
-   Post *Seek( Location target );
-   Post *Next( ); // next container isr
+   const Post *Seek( Location target );
+   const Post *Next( ); // next container isr
 
    ISR **Contained,*Excluded;
    ISREndDoc *EndDoc;
@@ -151,4 +129,19 @@ public:
 private:
    unsigned int nearestContained, farthestTerm;
    Location nearestStartLocation, nearestEndLocation;
+};
+
+
+class Dictionary
+{
+public:
+   ISR *OpenIsr(char *token);
+   // The first line of index.txt, in order
+   size_t GetNumberOfWords();
+   size_t GetNumberOfUniqueWords(); // number of posting list
+   size_t GetNumberOfDocuments();
+
+private:
+   size_t numOfWords, numOfUniqueWords, numOfDocuments;
+   size_t SetNum(size_t numOfWords, size_t numOfUniqueWords, size_t numOfDocuments);
 };

@@ -1,14 +1,58 @@
 #include "isr.h"
+#include "../index/index.h"
+
+// ISR
+
+Location ISR::GetStartLocation() // -> return start
+   {
+   return start;  
+   }  
+
+Location ISR::GetEndLocation() // -> return end
+   {
+   return end;
+   }
+
+size_t ISR::GetMatchingDoc() // return result
+   {
+   return matchingDocument;
+   }
+
+unsigned ISR::GetDocumentCount()
+   {
+   return postingList->getDocCount();
+   }
+
+unsigned ISR::GetNumberOfOccurrences()
+   {
+   return postingList->getUseCount();
+   }
+
+const Post *ISR::GetCurrentPost()
+   {
+   return curr;
+   }
+
+void ISR::SetCurrentPost( Post *p )
+   {
+   curr = p;
+   }
+
+void ISR::SetPostingList( PostingList *pl )
+   {
+   postingList = pl;
+   }
+
 
 // ISRWord
 
-Post *ISRWord::Next( )
+const Post *ISRWord::Next( )
    {
    // do a next on the term, then return match
    return curr ++;
    }
 
-Post *ISRWord::Seek ( Location target )
+const Post *ISRWord::Seek ( Location target )
    {
    // Seek ISR to the first occurrence beginning at the target location
 
@@ -18,16 +62,17 @@ Post *ISRWord::Seek ( Location target )
    size_t offset = p.first;
    size_t actualLocation = p.second;
 
+   const vector<Post> *list = postingList->getList();
    // seek from synchronization point to target
    while ( actualLocation < target )
       {
-      actualLocation += GetCustomUtf8(postingList->getList()[ offset + 1 ].getData());
+      actualLocation += GetCustomUtf8((*list)[offset+1].getData()); // TODO: unsigned char* and char*
       offset ++;
       }
 
    // update start location
    start = actualLocation;
-   curr = &postingList->getList( )[ offset ];
+   curr = &(*list)[offset];
 
    // TODO: update end(?)
    
@@ -36,53 +81,21 @@ Post *ISRWord::Seek ( Location target )
    if ( actualLocation > DocumentEnd->GetStartLocation( ) )
       DocumentEnd->NextDocument();
    
-   matchingDocument = DocumentEnd->docID;
+   matchingDocument = DocumentEnd->GetMatchingDoc();
 
    return curr;
    }
 
-Post *ISRWord::NextDocument( )
+const Post *ISRWord::NextDocument( )
    {
    // Seek ISR to the first occurrence just past the end of this document
    return Seek( DocumentEnd->GetStartLocation( ) + 1 );  
    }
 
 
-Location ISRWord::GetStartLocation()
-   {
-      return start;
-   }
-
-Location ISRWord::GetEndLocation()
-   {
-      return end;
-   }
-
-unsigned ISRWord::GetDocumentCount()
-   {
-      return postingList->getDocCount();
-   }
-
-unsigned ISRWord::GetNumberOfOccurrences()
-   {
-      return postingList->getUseCount();
-   }
-
-Post *ISRWord::GetCurrentPost()
-   {
-      return curr;
-   }
-
-size_t ISRWord::GetMatchingDoc()
-   {
-   return matchingDocument;
-   }
-
-
-
 // ISREndDoc
 
-Post *ISREndDoc::Seek ( Location target )
+const Post *ISREndDoc::Seek ( Location target )
    {
    // Seek ISR to the first occurrence beginning at the target location
 
@@ -92,80 +105,56 @@ Post *ISREndDoc::Seek ( Location target )
    size_t offset = p.first;
    size_t actualLocation = p.second;
 
+   const vector<Post> *list = postingList->getList();
    // seek from synchronization point to target
    while ( actualLocation < target )
       {
-      actualLocation += GetCustomUtf8(postingList->getList()[ offset + 1 ].getData());
+      actualLocation += GetCustomUtf8((*list)[offset+1].getData());
       offset ++;
       }
 
    // update start location
    start = actualLocation;
-   curr = &postingList->getList( )[ offset ];
+   curr = &(*list)[offset];
    matchingDocument = offset;
-
 
    return curr;
    }
 
-Post *ISREndDoc::NextDocument( )
+const Post *ISREndDoc::NextDocument( )
    {
    // Seek ISR to the first occurrence just past the end of this document
    return Seek( start + 1 );  
    }
 
-
-Location ISREndDoc::GetStartLocation()
-   {
-   return start;
-   }
-
-unsigned ISREndDoc::GetDocumentCount()
-   {
-      return postingList->getDocCount();
-   }
-
-
-Post *ISREndDoc::GetCurrentPost()
-   {
-      return curr;
-   }
-
-// set current post to p
-void ISREndDoc::SetCurrentPost(Post *p) 
-   {
-   curr = p;
-   }
-
-
 // set document, title, url lengths
-unsigned ISREndDoc::SetDocumentLength(size_t length)
+void ISREndDoc::SetDocumentLength(size_t length)
    {
    documentLength = length;
    }
 
-unsigned ISREndDoc::SetTitleLength(size_t length)
+void ISREndDoc::SetTitleLength(size_t length)
    {
    titleLength = length;
    }
 
-unsigned ISREndDoc::SetUrlLength(size_t length)
+void ISREndDoc::SetUrlLength(size_t length)
    {
    urlLength = length;
    }
 
 // get document, title, url lengths
-unsigned ISREndDoc::GetDocumentLength()
+size_t ISREndDoc::GetDocumentLength()
    {
    return documentLength;
    }
 
-unsigned ISREndDoc::GetTitleLength()
+size_t ISREndDoc::GetTitleLength()
    {
    return titleLength;
    }
 
-unsigned ISREndDoc::GetUrlLength()
+size_t ISREndDoc::GetUrlLength()
    {
    return urlLength;
    }
@@ -203,7 +192,7 @@ ISRContainer::~ISRContainer( )
    }
 
 
-Post *ISRContainer::Seek( Location target )
+const Post *ISRContainer::Seek( Location target )
    {
    // seek all the included ISRs to the first occurrence beginning at the target location
    for ( int i = 0; i < CountContained; i ++ )
@@ -216,7 +205,7 @@ Post *ISRContainer::Seek( Location target )
    }
 
 
-Post *ISRContainer::Next( )
+const Post *ISRContainer::Next( )
    {
    return Seek( Contained[ nearestContained ]->GetStartLocation( ) + 1 );
    }
