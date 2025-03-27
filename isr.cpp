@@ -68,6 +68,7 @@ const Post *ISRWord::Seek ( Location target )
       {
       actualLocation += GetCustomUtf8((*list)[offset+1].getData()); // TODO: unsigned char* and char*
       offset ++;
+      // TODO: if exceed list, reach the end and no match, return nullptr
       }
 
    // update start location
@@ -173,12 +174,14 @@ ISRContainer::ISRContainer( unsigned int countContained, unsigned int countExclu
       }
    
    if ( CountExcluded > 0 )
-      Excluded = new ISR( );  
+      {
+      Excluded = new ISR*[countExcluded];  
+      for ( unsigned int i = 0; i < countExcluded; i ++ )
+         Excluded[ i ] = new ISR( );  
+      }
 
    EndDoc = new ISREndDoc( );  
 
-
-   // set nearest location and term
    }
 
 
@@ -187,21 +190,86 @@ ISRContainer::~ISRContainer( )
    for ( int i = 0; i < CountContained; i ++ )
       delete Contained[ i ];  
    delete[ ] Contained;  
-   delete Excluded;  
+
+   for ( int i = 0; i < CountExcluded; i ++ )
+      delete Excluded[ i ];  
+   delete[ ] Excluded;  
+
    delete EndDoc;  
    }
 
 
 const Post *ISRContainer::Seek( Location target )
    {
-   // seek all the included ISRs to the first occurrence beginning at the target location
-   for ( int i = 0; i < CountContained; i ++ )
+   bool found = false;  
+
+   while ( !found )
       {
-      Contained[ i ]->Seek( target );  
+      // seek all the included ISRs to the first occurrence beginning at the target location
+      for ( int i = 0; i < CountContained; i ++ )\
+         {
+         const Post *result = Contained[ i ]->Seek( target );  
+         if ( result == nullptr )
+            return nullptr;  // if any ISR reaches the end, there is no match
+         // update nearest and farthest terms
+         Location loc = Contained[ i ]->GetStartLocation();  
+         if ( loc < Contained[ nearestContained ]->GetStartLocation( ) )
+            nearestContained = i;  
+         if ( loc > Contained[ farthestContained ]->GetStartLocation( ) )
+            farthestContained = i;  
+         }
+      for ( int i = 0; i < CountExcluded; i ++ )
+         Excluded[ i ]->Seek( target );  
+
+      Location docEnd, docBegin;
+
+      while ( true )
+         {
+         // move the document end ISR to just past the furthest contained ISR
+         const Post *result = EndDoc->Seek( Contained[ farthestContained ]->GetStartLocation( ) + 1 );  
+         if ( result == nullptr )
+            return nullptr;  // if any ISR reaches the end, there is no match
+         
+         // calculate document begin location
+         docEnd = EndDoc->GetStartLocation( );  
+         docBegin = docEnd - EndDoc->GetDocumentLength( );  
+
+         // seek all the other contained terms to past the document begin
+         bool allWithinDoc = true;
+         for ( int i = 0; i < CountContained; i ++ )
+            {
+            const Post *result = Contained[ i ]->Seek( docBegin );  
+            if ( result == nullptr )
+               return nullptr;  // if any ISR reaches the end, there is no match
+
+            if ( Contained[ i ]->GetStartLocation() > docEnd )
+               allWithinDoc = false;  // not in this document
+            }
+
+         // if all ISRs within the document, break the loop
+         if ( allWithinDoc )
+            break;
+         }
+
+      // seek all the excluded ISRs to the first occurrence beginning at the document begin location
+      found = true;
+      for ( int i = 0; i < CountExcluded; i ++ )
+         {
+         Excluded[ i ]->Seek( docBegin );  
+         
+         if ( Excluded[ i ]->GetStartLocation() < docEnd ) // if any excluded ISR falls within the document
+            {
+            // reset the target to one past the end of the document
+            target = docEnd + 1;  
+            found = false;  
+            break;  
+            }
+         }
       }
 
-   // move the document end ISR to just past the furthest contained ISR
-   EndDoc->Seek( Contained[ farthestTerm ]->GetStartLocation( ) + 1 );  
+   // find document
+   matchingDocument = EndDoc->GetMatchingDoc();
+   return Contained[0]->GetCurrentPost();  // return something, not nullptr
    }
 
 

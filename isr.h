@@ -122,13 +122,13 @@ public:
    const Post *Seek( Location target );
    const Post *Next( ); // next container isr
 
-   ISR **Contained,*Excluded;
+   ISR **Contained, **Excluded;
    ISREndDoc *EndDoc;
    unsigned int CountContained, CountExcluded;
 
 private:
-   unsigned int nearestContained, farthestTerm;
-   Location nearestStartLocation, nearestEndLocation;
+   unsigned int nearestContained = 0, farthestContained = 0;
+   // Location nearestStartLocation, farthestStartLocation;
 };
 
 
