@@ -1,4 +1,4 @@
-#include "index/index.h"
+#include "../index/index.h"
 
 class Dictionary
 {
@@ -17,28 +17,71 @@ private:
 class ISR
 {
 public:
-   virtual Post *Next();
-   virtual Post *NextDocument();
-   virtual Post *Seek(Location target);
-   virtual Location GetStartLocation();
-   virtual Location GetEndLocation();
+   virtual Post *Next(); // -> 
+   virtual Post *NextDocument(); // -> return 
+   virtual Post *Seek(Location target); // -> return delta
+   virtual Location GetStartLocation(); // -> return start  
+   virtual Location GetEndLocation(); // -> return end
+   virtual size_t GetMatchingDoc(); // return result
+
+protected:
+   PostingList *postingList; 
+   Post *curr; // current post 
+   Location start, end;
+
+   size_t matchingDocument; // final result
 };
+
+class ISREndDoc : public ISR
+{
+public:
+   Post *Seek(Location target); // -> return delta
+   Post *NextDocument(); // -> return 
+   Location GetStartLocation(); // -> return start
+   size_t GetMatchingDoc(); // return result  
+
+   unsigned GetDocumentCount();
+   virtual Post *GetCurrentPost();
+   void SetCurrentPost(Post *p);
+   void SetPostingList( PostingList *pl );
+
+   // type-specific data
+   unsigned GetDocumentLength();
+   unsigned GetTitleLength();
+   unsigned GetUrlLength();
+
+   unsigned SetDocumentLength(size_t length);
+   unsigned SetTitleLength(size_t length);
+   unsigned SetUrlLength(size_t length);
+
+private:
+   size_t documentLength = 0, titleLength = 0, urlLength = 0;
+
+};
+
 
 class ISRWord : public ISR
 {
 public:
+   Post *Next(); // -> 
+   Post *NextDocument(); // -> return 
+   Post *Seek(Location target); // -> return delta
+   Location GetStartLocation(); // -> return start  
+   Location GetEndLocation(); // -> return end
+   size_t GetMatchingDoc(); // return result
+
    unsigned GetDocumentCount();
    unsigned GetNumberOfOccurrences();
    virtual Post *GetCurrentPost();
+   void SetCurrentPost(Post *p);
+
+   void SetPostingList( PostingList *pl );
+
+private:
+   ISREndDoc *DocumentEnd;
 };
 
-class ISREndDoc : public ISRWord
-{
-public:
-   unsigned GetDocumentLength();
-   unsigned GetTitleLength();
-   unsigned GetUrlLength();
-};
+
 
 class ISROr : public ISR
 {
@@ -93,16 +136,19 @@ private:
 class ISRContainer : public ISR
 {
 public:
+
+   ISRContainer( unsigned int countContained, unsigned int countExcluded );  // TODO: think about init
+   ~ISRContainer( );  
+
+   // Location Next( );
+   Post *Seek( Location target );
+   Post *Next( ); // next container isr
+
    ISR **Contained,*Excluded;
    ISREndDoc *EndDoc;
-   unsigned CountContained, CountExcluded;
-   Post *Seek( Location target );
-   Post *Next( )
-   {
-   Seek( Contained[ nearestContained ]->GetStartlocation( ) + 1 );
-   }
+   unsigned int CountContained, CountExcluded;
 
 private:
-   unsigned nearestTerm, farthestTerm;
+   unsigned int nearestContained, farthestTerm;
    Location nearestStartLocation, nearestEndLocation;
 };
