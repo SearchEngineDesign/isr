@@ -216,7 +216,7 @@ const Post *ISRContainer::Seek( Location target )
    while ( !found )
       {
       // seek all the included ISRs to the first occurrence beginning at the target location
-      for ( int i = 0; i < CountContained; i ++ )\
+      for ( int i = 0; i < CountContained; i ++ )
          {
          const Post *result = Contained[ i ]->Seek( target );  
          if ( result == nullptr )
