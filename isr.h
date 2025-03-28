@@ -86,7 +86,7 @@ public:
    unsigned int NumberOfTerms;
    const Post *Seek(Location target);
    const Post *Next();
-
+   const Post *NextDocument();
    ISREndDoc *EndDoc;
 
 private:

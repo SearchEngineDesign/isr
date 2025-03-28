@@ -296,6 +296,8 @@ const Post *ISRContainer::Next( )
 const Post *ISRAnd::Seek( Location target )
    {
    // Seek all the ISRs to the first occurrence beginning at the target location.
+   nearestStartLocation = Terms[ 0 ]->GetStartLocation();
+   farthestStartLocation = 0;
    for ( int i = 0; i < NumberOfTerms; i ++ )
       {
       const Post *result = Terms[ i ]->Seek( target );  
@@ -356,17 +358,25 @@ const Post *ISRAnd::Next()
    }
 
 
+const Post *ISRAnd::NextDocument()
+   {
+   return Seek( EndDoc->GetEndLocation( ) + 1 );
+   }
+
 // ISROr
 const Post *ISROr::Seek( Location target )
    {
-      nearestStartLocation = std::numeric_limits<Location>::max();
-      nearestEndLocation = 0;
+      nearestStartLocation = Terms[ 0 ]->GetStartLocation();
+      nearestEndLocation =0;
+
+      bool flag = false; // if all terms reach the end, return nullptr
 
       for ( int i = 0; i < NumberOfTerms; i ++ )
          {
          const Post *result = Terms[ i ]->Seek(target);
          if ( result )
             {
+            flag = true;
             Location loc = Terms[ i ]->GetStartLocation();
             if ( loc < nearestStartLocation )
                {
@@ -380,7 +390,7 @@ const Post *ISROr::Seek( Location target )
             }
          }
       
-      if ( nearestStartLocation > std::numeric_limits<Location>::max() )
+      if ( !flag )
          return nullptr;
 
       matchingDocument = Terms[ nearestTerm ] -> GetMatchingDoc();
@@ -401,4 +411,3 @@ Location ISROr::GetEndLocation()
    {
       return nearestEndLocation;
    }
-   
