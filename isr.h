@@ -68,12 +68,14 @@ public:
    unsigned NumberOfTerms;
    Location GetStartLocation();
    Location GetEndLocation();
-   Post *Seek(Location target);
-   Post *Next();
-   Post *NextDocument();
+   const Post *Seek(Location target);
+   const Post *Next();
+   const Post *NextDocument();
+
+   ISREndDoc *EndDoc;
 
 private:
-   unsigned nearestTerm;
+   unsigned nearestTerm = 0;
    Location nearestStartLocation, nearestEndLocation;
 };
 

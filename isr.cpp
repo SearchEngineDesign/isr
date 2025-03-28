@@ -68,7 +68,8 @@ const Post *ISRWord::Seek ( Location target )
       {
       if ( offset + 1 < (*list).size() ) 
          {
-         actualLocation += GetCustomUtf8((*list)[offset+1].getData()); // TODO: unsigned char* and char*
+         actualLocation += GetCustomUtf8(reinterpret_cast<const Utf8*>((*list)[offset+1].getData()));
+         // actualLocation += GetCustomUtf8((*list)[offset+1].getData()); // TODO: unsigned char* and char*
          offset ++;
          }
       else
@@ -117,7 +118,8 @@ const Post *ISREndDoc::Seek ( Location target )
    // seek from synchronization point to target
    while ( actualLocation < target )
       {
-      actualLocation += GetCustomUtf8((*list)[offset+1].getData());
+      // actualLocation += GetCustomUtf8((*list)[offset+1].getData());
+      actualLocation += GetCustomUtf8(reinterpret_cast<const Utf8*>((*list)[offset+1].getData()));
       offset ++;
       }
 
@@ -352,3 +354,51 @@ const Post *ISRAnd::Next()
    {
    return Seek( nearestStartLocation + 1 );  
    }
+
+
+// ISROr
+const Post *ISROr::Seek( Location target )
+   {
+      nearestStartLocation = std::numeric_limits<Location>::max();
+      nearestEndLocation = 0;
+
+      for ( int i = 0; i < NumberOfTerms; i ++ )
+         {
+         const Post *result = Terms[ i ]->Seek(target);
+         if ( result )
+            {
+            Location loc = Terms[ i ]->GetStartLocation();
+            if ( loc < nearestStartLocation )
+               {
+               nearestTerm = i;
+               nearestStartLocation = loc;
+               }
+            else if ( loc > nearestEndLocation )
+               {
+               nearestEndLocation = loc;
+               }
+            }
+         }
+      
+      if ( nearestStartLocation > std::numeric_limits<Location>::max() )
+         return nullptr;
+
+      matchingDocument = Terms[ nearestTerm ] -> GetMatchingDoc();
+      return Terms[ nearestTerm ]->GetCurrentPost();
+   }
+
+const Post *ISROr::NextDocument()
+   {
+   return Seek( EndDoc->GetEndLocation( ) + 1 );
+   }
+
+Location ISROr::GetStartLocation()
+   {
+      return nearestStartLocation;
+   }
+
+Location ISROr::GetEndLocation()
+   {
+      return nearestEndLocation;
+   }
+   
