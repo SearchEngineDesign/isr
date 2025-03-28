@@ -99,12 +99,10 @@ class ISRPhrase : public ISR
 public:
    ISR **Terms;
    unsigned NumberOfTerms;
-   Post *Seek(Location target);
-   Post *Next()
-   {
-      // Finds overlapping phrase matches.
-      return Seek(nearestStartLocation + 1);
-   }
+   const Post *Seek(Location target);
+   const Post *Next();
+
+   ISREndDoc *EndDoc;
 
 private:
    unsigned nearestTerm, farthestTerm;

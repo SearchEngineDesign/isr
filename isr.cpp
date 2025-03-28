@@ -411,3 +411,68 @@ Location ISROr::GetEndLocation()
    {
       return nearestEndLocation;
    }
+
+
+// ISRPhrase
+
+const Post *ISRPhrase::Seek( Location target )
+   {
+      nearestStartLocation = Terms[ 0 ]->GetStartLocation();
+      for ( int i = 1; i < NumberOfTerms; i ++ )
+         {
+         const Post *result = Terms[ i ]->Seek(target);
+
+         if ( result == nullptr )
+            return nullptr;
+
+         Location loc = Terms[ i ]->GetStartLocation();
+         if (loc < nearestStartLocation)
+            {
+            nearestStartLocation = loc;
+            nearestTerm = i;
+            }
+         if (loc > nearestEndLocation)
+            {
+            nearestEndLocation = loc;
+            farthestTerm = i;
+            }
+         }
+      
+      for ( int i = 1; i < NumberOfTerms; i ++ )
+         {
+         if (Terms[i]->GetStartLocation() != Terms[i - 1]->GetStartLocation() + 1)
+            return Next();
+         }
+      
+      Location docEnd, docBegin;
+      
+      const Post *result = EndDoc->Seek(Terms[farthestTerm]->GetStartLocation() + 1);
+      if ( result == nullptr )
+         return nullptr;
+
+      docEnd = EndDoc->GetStartLocation( );  
+      docBegin = docEnd - EndDoc->GetDocumentLength( );  
+
+      bool allWithinDoc = true;
+      for (unsigned i = 0; i < NumberOfTerms; ++i)
+         {
+         if (Terms[i]->GetStartLocation() < docBegin || Terms[i]->GetStartLocation() > docEnd)
+            {
+            allWithinDoc = false;
+            break;
+            }
+         }
+
+      if (allWithinDoc)
+         {
+         matchingDocument = EndDoc->GetMatchingDoc();
+         return Terms[0]->GetCurrentPost();
+         }
+      else
+         return Next();
+   }
+
+const Post *ISRPhrase::Next()
+   {
+   return Seek( nearestStartLocation + 1 );
+   }
