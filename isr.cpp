@@ -352,3 +352,88 @@ const Post *ISRAnd::Next()
    {
    return Seek( nearestStartLocation + 1 );  
    }
+
+const Post *ISRAnd::NextDocument()
+   {
+   return Seek( EndDoc->GetStartLocation( ) + 1 );  
+   }
+
+const Post *ISRPhrase::Seek(Location target) {
+   // Step 1: Seek all ISRs to the first occurrence beginning at the target location
+   for (unsigned i = 0; i < NumberOfTerms; i++) {
+       const Post *p = Terms[i]->Seek(target);
+       if (p == nullptr) {
+           // If any ISR reaches the end, there is no match (Step 4)
+           return nullptr;
+       }
+   }
+   
+   bool phraseFound = false;
+   
+   while (!phraseFound) {
+       // Find the furthest term (Step 2)
+       farthestTerm = 0;
+       farthestStartLocation = Terms[0]->GetStartLocation();
+       
+       for (unsigned i = 1; i < NumberOfTerms; i++) {
+           Location currentStart = Terms[i]->GetStartLocation();
+           if (currentStart > farthestStartLocation) {
+               farthestTerm = i;
+               farthestStartLocation = currentStart;
+           }
+       }
+       
+       // Find the nearest term
+       nearestTerm = 0;
+       nearestStartLocation = Terms[0]->GetStartLocation();
+       
+       for (unsigned i = 1; i < NumberOfTerms; i++) {
+           Location currentStart = Terms[i]->GetStartLocation();
+           if (currentStart < nearestStartLocation) {
+               nearestTerm = i;
+               nearestStartLocation = currentStart;
+           }
+       }
+       
+       // Check if all terms are properly aligned for a phrase
+       bool allAligned = true;
+       
+       for (unsigned i = 0; i < NumberOfTerms; i++) {
+           // Calculate expected position: furthestTerm should be at position 
+           // furthestStartLocation, so i should be at (furthestStartLocation - (farthestTerm - i))
+           Location expectedLocation = farthestStartLocation - (farthestTerm - i);
+           Location currentLocation = Terms[i]->GetStartLocation();
+           
+           if (currentLocation != expectedLocation) {
+               allAligned = false;
+               
+               // Step 3: If any term is past the desired location, try again
+               // Seek this term to the expected location
+               const Post *p = Terms[i]->Seek(expectedLocation);
+               
+               if (p == nullptr) {
+                   // If any ISR reaches the end, there is no match (Step 4)
+                   return nullptr;
+               }
+               
+               // If after seeking, the term is still not at expected location,
+               // we need to start over with new positions
+               break;
+           }
+       }
+       
+       // If all terms are aligned, we've found a matching phrase
+       if (allAligned) {
+           phraseFound = true;
+       }
+   }
+   
+   // Update phrase information
+   nearestEndLocation = Terms[NumberOfTerms - 1]->GetEndLocation();
+   
+   // Set the current post
+   curr = Terms[nearestTerm]->GetCurrentPost();
+   
+   // Return the current post
+   return curr;
+}

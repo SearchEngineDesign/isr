@@ -68,9 +68,9 @@ public:
    unsigned NumberOfTerms;
    Location GetStartLocation();
    Location GetEndLocation();
-   Post *Seek(Location target);
-   Post *Next();
-   Post *NextDocument();
+   const Post *Seek(Location target);
+   const Post *Next();
+   const Post *NextDocument();
 
 private:
    unsigned nearestTerm;
@@ -79,12 +79,20 @@ private:
 
 class ISRAnd : public ISR
 {
+// 1. Seek all the ISRs to the first occurrence beginning at
+// the target location.
+// 2. Move the document end ISR to just past the furthest
+// word, then calculate the document begin location.
+// 3. Seek all the other terms to past the document begin.
+// 4. If any term is past the document end, return to
+// step 2.
+// 5. If any ISR reaches the end, there is no match.
 public:
    ISR **Terms;
    unsigned int NumberOfTerms;
    const Post *Seek(Location target);
    const Post *Next();
-
+   const Post *NextDocument();
    ISREndDoc *EndDoc;
 
 private:
@@ -94,11 +102,21 @@ private:
 
 class ISRPhrase : public ISR
 {
+// 1. Seek all ISRs to the first occurrence beginning at
+// the target location.
+// 2. Pick the furthest term and attempt to seek all
+// the other terms to the first location beginning
+// where they should appear relative to the furthest
+// term.
+// 3. If any term is past the desired location, return
+// to step 2.
+// 4. If any ISR reaches the end, there is no match.
+
 public:
    ISR **Terms;
    unsigned NumberOfTerms;
-   Post *Seek(Location target);
-   Post *Next()
+   const Post *Seek(Location target);
+   const Post *Next()
    {
       // Finds overlapping phrase matches.
       return Seek(nearestStartLocation + 1);
@@ -106,7 +124,7 @@ public:
 
 private:
    unsigned nearestTerm, farthestTerm;
-   Location nearestStartLocation, nearestEndLocation;
+   Location nearestStartLocation, nearestEndLocation, farthestStartLocation;
 };
 
 
