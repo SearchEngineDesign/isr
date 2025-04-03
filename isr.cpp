@@ -58,7 +58,9 @@ const Post *ISRWord::Seek ( Location target )
 
    // use synchronization point
    uint8_t highBits = target >> 8;
-   std::pair<size_t, size_t> p = postingList->getSeekTable()[highBits];
+   if (highBits >= postingList->getSeekIndex())
+      return nullptr;
+   std::pair<size_t, size_t> p = postingList->getSeekTable()->operator[](highBits);
    size_t offset = p.first;
    size_t actualLocation = p.second;
 
@@ -109,7 +111,9 @@ const Post *ISREndDoc::Seek ( Location target )
 
    // use synchronization point
    uint8_t highBits = target >> 8;
-   std::pair<size_t, size_t> p = postingList->getSeekTable()[highBits];
+   if (highBits >= postingList->getSeekIndex())
+      return nullptr;
+   std::pair<size_t, size_t> p = postingList->getSeekTable()->operator[](highBits);
    size_t offset = p.first;
    size_t actualLocation = p.second;
 
