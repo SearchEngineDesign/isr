@@ -20,25 +20,25 @@ size_t ISR::GetMatchingDoc() // return result
 
 unsigned ISR::GetDocumentCount()
    {
-   return postingList->getDocCount();
+   return postingList->documentCount;
    }
 
 unsigned ISR::GetNumberOfOccurrences()
    {
-   return postingList->getUseCount();
+   return postingList->posts;
    }
 
-const Post *ISR::GetCurrentPost()
+const SerialPost *ISR::GetCurrentPost()
    {
    return curr;
    }
 
-void ISR::SetCurrentPost( Post *p )
+void ISR::SetCurrentPost( const SerialPost *p )
    {
    curr = p;
    }
 
-void ISR::SetPostingList( PostingList *pl )
+void ISR::SetPostingList( const SerialPostingList *pl )
    {
    postingList = pl;
    }
@@ -46,31 +46,47 @@ void ISR::SetPostingList( PostingList *pl )
 
 // ISRWord
 
-const Post *ISRWord::Next( )
+const SerialPost *ISRWord::Next( )
    {
    // do a next on the term, then return match
    return curr ++;
    }
 
-const Post *ISRWord::Seek ( Location target )
+const SerialPost *ISRWord::Seek ( Location target )
    {
    // Seek ISR to the first occurrence beginning at the target location
 
    // use synchronization point
    uint8_t highBits = target >> 8;
-   if (highBits >= postingList->getSeekIndex())
+   size_t idx = 0;
+   while (highBits > 0) {
+      highBits >>= 1;
+      idx++;
+   }
+   if (idx >= postingList->seekIndex)
       return nullptr;
-   std::pair<size_t, size_t> p = postingList->getSeekTable()->operator[](highBits);
-   size_t offset = p.first;
-   size_t actualLocation = p.second;
+   const std::pair<size_t, size_t> *p = postingList->getSeekPair( idx ); 
+   // if (highBits >= postingList->seekIndex)
+   //    return nullptr;
 
-   const vector<Post> *list = postingList->getList();
+   // const std::pair<size_t, size_t> *p = postingList->getSeekPair( highBits ); // TODO: translate
+   size_t offset = p->first;
+   size_t actualLocation = p->second;
+
    // seek from synchronization point to target
+   std::cout << "high bit: " << idx << " offset: " << offset << " actual location: " << actualLocation <<  "\n";
+   std::cout << "number of posts: " << postingList->posts << "\n";
+   
+
+   // if using seek table
    while ( actualLocation < target )
       {
-      if ( offset + 1 < (*list).size() ) 
+      if ( offset + 1 < postingList->posts ) // TODO: check
          {
-         actualLocation += GetCustomUtf8(reinterpret_cast<const Utf8*>((*list)[offset+1].getData()));
+         std::cout << "data 1: " << offset + 1 << std::endl;
+         const SerialPost *data = postingList->getPost(offset+1);
+         std::cout << "data: " << offset + 1 << std::endl;
+         actualLocation += GetCustomUtf8(reinterpret_cast<const Utf8 *>(data));
          // actualLocation += GetCustomUtf8((*list)[offset+1].getData()); // TODO: unsigned char* and char*
          offset ++;
          }
@@ -83,21 +99,26 @@ const Post *ISRWord::Seek ( Location target )
 
    // update start location
    start = actualLocation;
-   curr = &(*list)[offset];
-
+   std::cout << "data 2: " << offset << std::endl;
+   curr = postingList->getPost(offset);
+   std::cout << "test\n";
    // TODO: update end(?)
    
    // update end of document
-
-   if ( actualLocation > DocumentEnd->GetStartLocation( ) )
+   std::cout << "doc end start loc: " << DocumentEnd->GetStartLocation() << std::endl;
+   if ( actualLocation > DocumentEnd->GetStartLocation( ) ) {
+      std::cout << "docend seek\n";
       DocumentEnd->Seek( actualLocation );
+   }
    
+   std::cout << "end if\n";
+
    matchingDocument = DocumentEnd->GetMatchingDoc();
 
    return curr;
    }
 
-const Post *ISRWord::NextDocument( )
+const SerialPost *ISRWord::NextDocument( )
    {
    // Seek ISR to the first occurrence just past the end of this document
    return Seek( DocumentEnd->GetStartLocation( ) + 1 );  
@@ -106,38 +127,53 @@ const Post *ISRWord::NextDocument( )
 
 // ISREndDoc
 
-const Post *ISREndDoc::Seek ( Location target )
+const SerialPost *ISREndDoc::Seek ( Location target )
    {
    // Seek ISR to the first occurrence beginning at the target location
 
    // use synchronization point
    uint8_t highBits = target >> 8;
-   if (highBits >= postingList->getSeekIndex())
+   size_t idx = 0;
+   while (highBits > 0) {
+      highBits >>= 1;
+      idx++;
+   }
+   if (idx >= postingList->seekIndex)
       return nullptr;
-   std::pair<size_t, size_t> p = postingList->getSeekTable()->operator[](highBits);
-   size_t offset = p.first;
-   size_t actualLocation = p.second;
-
-   const vector<Post> *list = postingList->getList();
+   const std::pair<size_t, size_t> *p = postingList->getSeekPair( idx );
+   size_t offset = p->first;
+   size_t actualLocation = p->second;
+   std::cout << "idx: " << idx << " offset: " << offset << " actual loc: " << actualLocation << std::endl;
    // seek from synchronization point to target
    while ( actualLocation < target )
       {
+      std::cout << "in while\n";
       // actualLocation += GetCustomUtf8((*list)[offset+1].getData());
-      actualLocation += GetCustomUtf8(reinterpret_cast<const Utf8*>((*list)[offset+1].getData()));
+      size_t delta = GetCustomUtf8(reinterpret_cast<const Utf8*>(postingList->getPost(offset+1)));
+      SetDocumentLength(delta);
+      actualLocation += delta;
       offset ++;
+      matchingDocument = offset; // set doc id of this document
       }
-
+   
    // update start location
    start = actualLocation;
-   curr = &(*list)[offset];
+   curr = postingList->getPost(offset);
    matchingDocument = offset;
-
+   std::cout << "finish end doc\n";
    return curr;
    }
 
-const Post *ISREndDoc::NextDocument( )
+   
+
+const SerialPost *ISREndDoc::NextDocument( )
    {
    // Seek ISR to the first occurrence just past the end of this document
+   return Seek( start + 1 );  
+   }
+
+const SerialPost *ISREndDoc::Next()
+   {
    return Seek( start + 1 );  
    }
 
@@ -215,7 +251,7 @@ size_t ISREndDoc::GetUrlLength()
 //    }
 
 
-const Post *ISRContainer::Seek( Location target )
+const SerialPost *ISRContainer::Seek( Location target )
    {
    bool found = false;  
 
@@ -224,7 +260,7 @@ const Post *ISRContainer::Seek( Location target )
       // seek all the included ISRs to the first occurrence beginning at the target location
       for ( int i = 0; i < CountContained; i ++ )
          {
-         const Post *result = Contained[ i ]->Seek( target );  
+         const SerialPost *result = Contained[ i ]->Seek( target );  
          if ( result == nullptr )
             return nullptr;  // if any ISR reaches the end, there is no match
          // update nearest and farthest terms
@@ -242,7 +278,7 @@ const Post *ISRContainer::Seek( Location target )
       while ( true )
          {
          // move the document end ISR to just past the furthest contained ISR
-         const Post *result = EndDoc->Seek( Contained[ farthestContained ]->GetStartLocation( ) + 1 );  
+         const SerialPost *result = EndDoc->Seek( Contained[ farthestContained ]->GetStartLocation( ) + 1 );  
          if ( result == nullptr )
             return nullptr;  // if any ISR reaches the end, there is no match
          
@@ -254,7 +290,7 @@ const Post *ISRContainer::Seek( Location target )
          bool allWithinDoc = true;
          for ( int i = 0; i < CountContained; i ++ )
             {
-            const Post *result = Contained[ i ]->Seek( docBegin );  
+            const SerialPost *result = Contained[ i ]->Seek( docBegin );  
             if ( result == nullptr )
                return nullptr;  // if any ISR reaches the end, there is no match
 
@@ -289,22 +325,27 @@ const Post *ISRContainer::Seek( Location target )
    }
 
 
-const Post *ISRContainer::Next( )
+const SerialPost *ISRContainer::Next( )
    {
    return Seek( Contained[ nearestContained ]->GetStartLocation( ) + 1 );
+   }
+
+const SerialPost *ISRContainer::NextDocument()
+   {
+   return Seek( EndDoc->GetStartLocation( ) + 1 );
    }
 
 
 // ISRAnd
 
-const Post *ISRAnd::Seek( Location target )
+const SerialPost *ISRAnd::Seek( Location target )
    {
    // Seek all the ISRs to the first occurrence beginning at the target location.
    nearestStartLocation = Terms[ 0 ]->GetStartLocation();
    farthestStartLocation = 0;
    for ( int i = 0; i < NumberOfTerms; i ++ )
       {
-      const Post *result = Terms[ i ]->Seek( target );  
+      const SerialPost *result = Terms[ i ]->Seek( target );  
       if ( result == nullptr )
          return nullptr;  // if any ISR reaches the end, there is no match
       // update nearest and farthest terms
@@ -326,7 +367,7 @@ const Post *ISRAnd::Seek( Location target )
    while ( true )
       {
       // move the document end ISR to just past the farthest word ISR
-      const Post *result = EndDoc->Seek( Terms[ farthestTerm ]->GetStartLocation( ) + 1 );  
+      const SerialPost *result = EndDoc->Seek( Terms[ farthestTerm ]->GetStartLocation( ) + 1 );  
       if ( result == nullptr )
          return nullptr;  // if any ISR reaches the end, there is no match
       
@@ -338,7 +379,7 @@ const Post *ISRAnd::Seek( Location target )
       bool allWithinDoc = true;
       for ( int i = 0; i < NumberOfTerms; i ++ )
          {
-         const Post *result = Terms[ i ]->Seek( docBegin );  
+         const SerialPost *result = Terms[ i ]->Seek( docBegin );  
          if ( result == nullptr )
             return nullptr;  // if any ISR reaches the end, there is no match
 
@@ -356,19 +397,19 @@ const Post *ISRAnd::Seek( Location target )
    return Terms[0]->GetCurrentPost();  // return something, not nullptr
    }
 
-const Post *ISRAnd::Next()
+const SerialPost *ISRAnd::Next()
    {
    return Seek( nearestStartLocation + 1 );  
    }
 
 
-const Post *ISRAnd::NextDocument()
+const SerialPost *ISRAnd::NextDocument()
    {
-   return Seek( EndDoc->GetEndLocation( ) + 1 );
+   return Seek( EndDoc->GetStartLocation( ) + 1 );
    }
 
 // ISROr
-const Post *ISROr::Seek( Location target )
+const SerialPost *ISROr::Seek( Location target )
    {
       nearestStartLocation = Terms[ 0 ]->GetStartLocation();
       nearestEndLocation =0;
@@ -377,7 +418,7 @@ const Post *ISROr::Seek( Location target )
 
       for ( int i = 0; i < NumberOfTerms; i ++ )
          {
-         const Post *result = Terms[ i ]->Seek(target);
+         const SerialPost *result = Terms[ i ]->Seek(target);
          if ( result )
             {
             flag = true;
@@ -401,9 +442,14 @@ const Post *ISROr::Seek( Location target )
       return Terms[ nearestTerm ]->GetCurrentPost();
    }
 
-const Post *ISROr::NextDocument()
+const SerialPost *ISROr::NextDocument()
    {
-   return Seek( EndDoc->GetEndLocation( ) + 1 );
+   return Seek( EndDoc->GetStartLocation( ) + 1 );
+   }
+
+const SerialPost *ISROr::Next()
+   {
+   return Seek( nearestStartLocation + 1 );  
    }
 
 Location ISROr::GetStartLocation()
@@ -419,12 +465,12 @@ Location ISROr::GetEndLocation()
 
 // ISRPhrase
 
-const Post *ISRPhrase::Seek( Location target )
+const SerialPost *ISRPhrase::Seek( Location target )
    {
       nearestStartLocation = Terms[ 0 ]->GetStartLocation();
       for ( int i = 1; i < NumberOfTerms; i ++ )
          {
-         const Post *result = Terms[ i ]->Seek(target);
+         const SerialPost *result = Terms[ i ]->Seek(target);
 
          if ( result == nullptr )
             return nullptr;
@@ -450,7 +496,7 @@ const Post *ISRPhrase::Seek( Location target )
       
       Location docEnd, docBegin;
       
-      const Post *result = EndDoc->Seek(Terms[farthestTerm]->GetStartLocation() + 1);
+      const SerialPost *result = EndDoc->Seek(Terms[farthestTerm]->GetStartLocation() + 1);
       if ( result == nullptr )
          return nullptr;
 
@@ -476,7 +522,13 @@ const Post *ISRPhrase::Seek( Location target )
          return Next();
    }
 
-const Post *ISRPhrase::Next()
+const SerialPost *ISRPhrase::Next()
    {
    return Seek( nearestStartLocation + 1 );
+   }
+
+
+const SerialPost *ISRPhrase::NextDocument()
+   {
+   return Seek( EndDoc->GetStartLocation( ) + 1 );
    }

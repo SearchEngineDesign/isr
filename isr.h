@@ -1,12 +1,13 @@
 #pragma once
 #include "../index/index.h"
+#include "../utils/IndexBlob.h"
 
 class ISR
 {
 public:
-   virtual const Post *Next(); // -> 
-   virtual const Post *NextDocument(); // -> return 
-   virtual const Post *Seek(Location target); // -> return delta
+   virtual const SerialPost *Next() = 0; // -> 
+   virtual const SerialPost *NextDocument() = 0; // -> return 
+   virtual const SerialPost *Seek(Location target) = 0; // -> return delta
 
    Location GetStartLocation(); // -> return start
    Location GetEndLocation(); // -> return end
@@ -15,14 +16,14 @@ public:
    unsigned GetDocumentCount();
    unsigned GetNumberOfOccurrences();
 
-   const Post *GetCurrentPost();
-   void SetCurrentPost(Post *p);
-   void SetPostingList( PostingList *pl );
+   const SerialPost *GetCurrentPost();
+   void SetCurrentPost(const SerialPost *p);
+   void SetPostingList( const SerialPostingList *pl );
 
 protected:
-   PostingList *postingList; 
-   const Post *curr; // current post 
-   Location start, end;
+   const SerialPostingList *postingList; 
+   const SerialPost *curr; // current post 
+   Location start = 0, end = 0;
 
    size_t matchingDocument; // final result
 };
@@ -30,8 +31,9 @@ protected:
 class ISREndDoc : public ISR
 {
 public:
-   const Post *Seek(Location target); // -> return delta
-   const Post *NextDocument(); // -> return 
+   const SerialPost *Seek(Location target); // -> return delta
+   const SerialPost *NextDocument(); // -> return 
+   const SerialPost *Next();
 
    // type-specific data
    size_t GetDocumentLength();
@@ -51,12 +53,11 @@ private:
 class ISRWord : public ISR
 {
 public:
-   const Post *Next(); // -> 
-   const Post *NextDocument(); // -> return 
-   const Post *Seek(Location target); // -> return delta
-
-private:
+   const SerialPost *Next(); // -> 
+   const SerialPost *NextDocument(); // -> return 
+   const SerialPost *Seek(Location target); // -> return delta
    ISREndDoc *DocumentEnd;
+
 };
 
 
@@ -68,9 +69,9 @@ public:
    unsigned NumberOfTerms;
    Location GetStartLocation();
    Location GetEndLocation();
-   const Post *Seek(Location target);
-   const Post *Next();
-   const Post *NextDocument();
+   const SerialPost *Seek(Location target);
+   const SerialPost *Next();
+   const SerialPost *NextDocument();
 
    ISREndDoc *EndDoc;
 
@@ -84,9 +85,9 @@ class ISRAnd : public ISR
 public:
    ISR **Terms;
    unsigned int NumberOfTerms;
-   const Post *Seek(Location target);
-   const Post *Next();
-   const Post *NextDocument();
+   const SerialPost *Seek(Location target);
+   const SerialPost *Next();
+   const SerialPost *NextDocument();
    ISREndDoc *EndDoc;
 
 private:
@@ -99,8 +100,9 @@ class ISRPhrase : public ISR
 public:
    ISR **Terms;
    unsigned NumberOfTerms;
-   const Post *Seek(Location target);
-   const Post *Next();
+   const SerialPost *Seek(Location target);
+   const SerialPost *Next();
+   const SerialPost *NextDocument();
 
    ISREndDoc *EndDoc;
 
@@ -120,8 +122,9 @@ public:
    // TODO: open ISR function in index
 
    // Location Next( );
-   const Post *Seek( Location target );
-   const Post *Next( ); // next container isr
+   const SerialPost *Seek( Location target );
+   const SerialPost *Next( ); // next container isr
+   const SerialPost *NextDocument();
 
    ISR **Contained, **Excluded;
    ISREndDoc *EndDoc;
