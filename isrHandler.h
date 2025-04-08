@@ -17,7 +17,16 @@ public:
 
    //
 
-   ISROr *OpenISROr(ISR **terms, IndexReadHandler *indexRead, unsigned int NumberOfTerms);
-   ISRAnd *OpenISRAnd(ISR **terms, IndexReadHandler *indexRead, unsigned int NumberOfTerms);
-   ISRPhrase *OpenISRPhrase( ISR **terms, IndexReadHandler *indexRead, unsigned int NumberOfTerms);
+   ISROr *OpenISROr(ISR **terms, unsigned int NumberOfTerms, IndexReadHandler *indexRead);
+   void CloseISROr( ISROr *isror );
+
+   ISRAnd *OpenISRAnd(ISR **terms, unsigned int NumberOfTerms , IndexReadHandler *indexRead);
+   void CloseISRAnd( ISRAnd *isrand );
+
+   ISRPhrase *OpenISRPhrase( ISR **terms, unsigned int NumberOfTerms, IndexReadHandler *indexRead );
+   void CloseISRPhrase ( ISRPhrase *isrphrase );
+
+
+   ISRContainer *OpenISRContainer( ISR **contained, ISR **excluded, unsigned int countContained, unsigned int countExcluded, IndexReadHandler *indexRead );
+   void CloseISRContainer( ISRContainer *isrcontainer );
 };

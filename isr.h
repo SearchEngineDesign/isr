@@ -74,6 +74,7 @@ public:
    const SerialPost *Seek(Location target); // -> return delta
    // ISREndDoc *EndDoc;
 
+
 };
 
 
@@ -148,7 +149,7 @@ public:
 
 private:
    unsigned int nearestContained = 0, farthestContained = 0;
-   // Location nearestStartLocation, farthestStartLocation;
+   Location nearestStartLocation, farthestStartLocation;
 };
 
 
