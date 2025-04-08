@@ -15,10 +15,9 @@ public:
    ISRWord *OpenISRWord( char *word, IndexReadHandler *indexRead );
    void CloseISRWord( ISRWord *isrWord );
 
+   //
 
-   // 
-
-  
-
-  
+   ISROr *OpenISROr(ISR **terms, IndexReadHandler *indexRead, unsigned int NumberOfTerms);
+   ISRAnd *OpenISRAnd(ISR **terms, IndexReadHandler *indexRead, unsigned int NumberOfTerms);
+   ISRPhrase *OpenISRPhrase( ISR **terms, IndexReadHandler *indexRead, unsigned int NumberOfTerms);
 };

@@ -2,6 +2,8 @@
 #include "../index/index.h"
 #include "../utils/IndexBlob.h"
 
+class ISREndDoc;
+
 class ISR
 {
 public:
@@ -20,6 +22,8 @@ public:
    void SetCurrentPost(const SerialPost *p);
    void SetPostingList( const SerialPostingList *pl );
 
+   ISREndDoc *EndDoc;
+
 protected:
    const SerialPostingList *postingList; 
    const SerialPost *curr; // current post 
@@ -28,7 +32,7 @@ protected:
    size_t matchingDocument; // final result
 };
 
-class ISREndDoc : public ISR
+class ISREndDoc
 {
 public:
    const SerialPost *Seek(Location target); // -> return delta
@@ -44,8 +48,20 @@ public:
    void SetTitleLength(size_t length);
    void SetUrlLength(size_t length);
 
+   Location GetStartLocation(); // -> return start
+   Location GetEndLocation(); // -> return end
+   size_t GetMatchingDoc(); // return result
+
+   const SerialPost *GetCurrentPost();
+   void SetCurrentPost(const SerialPost *p);
+   void SetPostingList( const SerialPostingList *pl );
+
 private:
    size_t documentLength = 0, titleLength = 0, urlLength = 0;
+   const SerialPostingList *postingList; 
+   const SerialPost *curr; // current post 
+   Location start = 0, end = 0;
+   size_t matchingDocument;
 
 };
 
@@ -56,7 +72,7 @@ public:
    const SerialPost *Next(); // -> 
    const SerialPost *NextDocument(); // -> return 
    const SerialPost *Seek(Location target); // -> return delta
-   ISREndDoc *DocumentEnd;
+   // ISREndDoc *EndDoc;
 
 };
 
@@ -66,14 +82,14 @@ class ISROr : public ISR
 {
 public:
    ISR **Terms;
-   unsigned NumberOfTerms;
+   unsigned int NumberOfTerms;
    Location GetStartLocation();
    Location GetEndLocation();
    const SerialPost *Seek(Location target);
    const SerialPost *Next();
    const SerialPost *NextDocument();
 
-   ISREndDoc *EndDoc;
+   // ISREndDoc *EndDoc;
 
 private:
    unsigned nearestTerm = 0;
@@ -88,7 +104,7 @@ public:
    const SerialPost *Seek(Location target);
    const SerialPost *Next();
    const SerialPost *NextDocument();
-   ISREndDoc *EndDoc;
+   // ISREndDoc *EndDoc;
 
 private:
    unsigned int nearestTerm = 0, farthestTerm = 0;
@@ -99,12 +115,12 @@ class ISRPhrase : public ISR
 {
 public:
    ISR **Terms;
-   unsigned NumberOfTerms;
+   unsigned int NumberOfTerms;
    const SerialPost *Seek(Location target);
    const SerialPost *Next();
    const SerialPost *NextDocument();
 
-   ISREndDoc *EndDoc;
+   // ISREndDoc *EndDoc;
 
 private:
    unsigned nearestTerm, farthestTerm;
@@ -127,7 +143,7 @@ public:
    const SerialPost *NextDocument();
 
    ISR **Contained, **Excluded;
-   ISREndDoc *EndDoc;
+   // ISREndDoc *EndDoc;
    unsigned int CountContained, CountExcluded;
 
 private:
