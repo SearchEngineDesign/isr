@@ -7,6 +7,7 @@ class ISREndDoc;
 class ISR
 {
 public:
+   virtual ~ISR() {std::cout << "isr destructor\n";}
    virtual const SerialPost *Next() = 0; // -> 
    virtual const SerialPost *NextDocument() = 0; // -> return 
    virtual const SerialPost *Seek(Location target) = 0; // -> return delta
@@ -35,6 +36,7 @@ protected:
 class ISREndDoc
 {
 public:
+   ~ISREndDoc() {std::cout << "enddoc destructor\n";}
    const SerialPost *Seek(Location target); // -> return delta
    const SerialPost *NextDocument(); // -> return 
    const SerialPost *Next();
@@ -69,11 +71,11 @@ private:
 class ISRWord : public ISR
 {
 public:
+   ~ISRWord() {std::cout << "word destructor\n";}
+
    const SerialPost *Next(); // -> 
    const SerialPost *NextDocument(); // -> return 
    const SerialPost *Seek(Location target); // -> return delta
-   // ISREndDoc *EndDoc;
-
 
 };
 
@@ -82,15 +84,17 @@ public:
 class ISROr : public ISR
 {
 public:
+   ~ISROr() {std::cout << "or destructor\n";}
+
    ISR **Terms;
    unsigned int NumberOfTerms;
    Location GetStartLocation();
    Location GetEndLocation();
+
    const SerialPost *Seek(Location target);
    const SerialPost *Next();
    const SerialPost *NextDocument();
 
-   // ISREndDoc *EndDoc;
 
 private:
    unsigned nearestTerm = 0;
@@ -100,12 +104,14 @@ private:
 class ISRAnd : public ISR
 {
 public:
+   ~ISRAnd() {std::cout << "and destructor\n";}
+
    ISR **Terms;
    unsigned int NumberOfTerms;
+
    const SerialPost *Seek(Location target);
    const SerialPost *Next();
    const SerialPost *NextDocument();
-   // ISREndDoc *EndDoc;
 
 private:
    unsigned int nearestTerm = 0, farthestTerm = 0;
@@ -115,13 +121,14 @@ private:
 class ISRPhrase : public ISR
 {
 public:
+   ~ISRPhrase(){std::cout << "phrase destructor\n";}
+
    ISR **Terms;
    unsigned int NumberOfTerms;
+
    const SerialPost *Seek(Location target);
    const SerialPost *Next();
    const SerialPost *NextDocument();
-
-   // ISREndDoc *EndDoc;
 
 private:
    unsigned nearestTerm, farthestTerm;
@@ -134,9 +141,7 @@ class ISRContainer : public ISR
 public:
 
    // ISRContainer( unsigned int countContained, unsigned int countExcluded );  // TODO: think about init
-   // ~ISRContainer( );  
-
-   // TODO: open ISR function in index
+   ~ISRContainer( ) {std::cout << "container destructor\n";}
 
    // Location Next( );
    const SerialPost *Seek( Location target );
@@ -144,7 +149,6 @@ public:
    const SerialPost *NextDocument();
 
    ISR **Contained, **Excluded;
-   // ISREndDoc *EndDoc;
    unsigned int CountContained, CountExcluded;
 
 private:

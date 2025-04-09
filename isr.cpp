@@ -1,9 +1,6 @@
+#include <climits>
 #include "isr.h"
 #include "../index/index.h"
-
-//TODO:
-//1. enddoc: ignore 1,2
-//2. 
 
 // ISR
 

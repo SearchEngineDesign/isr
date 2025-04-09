@@ -2,8 +2,13 @@
 #include "isr.h"
 #include "../utils/IndexBlob.h"
 
+void ISRHandler::SetIndexReadHandler( IndexReadHandler *iRead ) 
+   {
+   indexRead = iRead;
+   }
 
-ISREndDoc *ISRHandler::OpenISREndDoc( IndexReadHandler *indexRead )
+
+ISREndDoc *ISRHandler::OpenISREndDoc(  )
    {
    ISREndDoc *endDoc = new ISREndDoc;
 
@@ -30,7 +35,7 @@ void ISRHandler::CloseISREndDoc( ISREndDoc *isrEndDoc )
    isrEndDoc = nullptr;
    }
 
-ISRWord *ISRHandler::OpenISRWord( char *word, IndexReadHandler *indexRead )
+ISRWord *ISRHandler::OpenISRWord( char *word )
    {
    ISRWord *isrWord = new ISRWord;
 
@@ -43,73 +48,84 @@ ISRWord *ISRHandler::OpenISRWord( char *word, IndexReadHandler *indexRead )
 
    isrWord->SetPostingList(postingList);
 
-   isrWord->EndDoc = OpenISREndDoc(indexRead);
+   isrWord->EndDoc = OpenISREndDoc( );
 
    isrWord->Seek(0); // seek to the first occurrence
 
    return isrWord;
    }
 
-void ISRHandler::CloseISRWord( ISRWord *isrWord )
+
+void ISRHandler::CloseISR( ISR *isr )
    {
-   CloseISREndDoc(isrWord->EndDoc);
-   delete isrWord;
-   isrWord = nullptr;
+   if ( isr != nullptr )
+      CloseISREndDoc(isr->EndDoc);
+   delete isr;
+   isr = nullptr;
+   std::cout << "call close";
    }
 
+// void ISRHandler::CloseISRWord( ISRWord *isrWord )
+//    {
+//    if ( isrWord != nullptr )
+//       CloseISREndDoc(isrWord->EndDoc);
+//    delete isrWord;
+//    isrWord = nullptr;
+//    }
 
-ISROr *ISRHandler::OpenISROr( ISR **terms, unsigned int NumberOfTerms, IndexReadHandler *indexRead )
+
+ISROr *ISRHandler::OpenISROr( ISR **terms, unsigned int NumberOfTerms )
    {
    ISROr *isrOr = new ISROr;
    isrOr->Terms = terms;
    isrOr->NumberOfTerms = NumberOfTerms;
-   isrOr->EndDoc = OpenISREndDoc(indexRead);
+   isrOr->EndDoc = OpenISREndDoc( );
    isrOr->Seek(0);
    return isrOr;
    }
 
-void ISRHandler::CloseISROr( ISROr *isror )
-   {
-   CloseISREndDoc(isror -> EndDoc);
-   delete isror;
-   isror = nullptr;
-   }
+// void ISRHandler::CloseISROr( ISROr *isror )
+//    {
+//    CloseISREndDoc(isror -> EndDoc);
+//    delete isror;
+//    isror = nullptr;
+//    }
 
 
-ISRAnd *ISRHandler::OpenISRAnd( ISR **terms, unsigned int NumberOfTerms, IndexReadHandler *indexRead) 
+ISRAnd *ISRHandler::OpenISRAnd( ISR **terms, unsigned int NumberOfTerms ) 
    {
    ISRAnd *isrAnd = new ISRAnd;
    isrAnd->Terms = terms;
    isrAnd->NumberOfTerms = NumberOfTerms;
-   isrAnd->EndDoc = OpenISREndDoc(indexRead);
+   isrAnd->EndDoc = OpenISREndDoc( );
    isrAnd->Seek(0);
    return isrAnd;
    }
 
-void ISRHandler::CloseISRAnd( ISRAnd *isrand )
-   {
-      CloseISREndDoc(isrand->EndDoc);
-      delete isrand;
-      isrand = nullptr;
-   }
+// void ISRHandler::CloseISRAnd( ISRAnd *isrand )
+//    {
+//       CloseISREndDoc(isrand->EndDoc);
+//       delete isrand;
+//       isrand = nullptr;
+//    }
 
-ISRPhrase *ISRHandler::OpenISRPhrase( ISR **terms, unsigned int NumberOfTerms, IndexReadHandler *indexRead )
+ISRPhrase *ISRHandler::OpenISRPhrase( ISR **terms, unsigned int NumberOfTerms )
    {
    ISRPhrase *isrPhrase = new ISRPhrase;
    isrPhrase->Terms = terms;
    isrPhrase->NumberOfTerms = NumberOfTerms;
-   isrPhrase->EndDoc = OpenISREndDoc(indexRead);
+   isrPhrase->EndDoc = OpenISREndDoc( );
    isrPhrase->Seek(0);
    return isrPhrase;
    }
 
-void ISRHandler::CloseISRPhrase( ISRPhrase *isrphrase ) {
-   CloseISREndDoc(isrphrase->EndDoc);
-   delete isrphrase;
-   isrphrase = nullptr;
-}
+// void ISRHandler::CloseISRPhrase( ISRPhrase *isrphrase ) {
+//    CloseISREndDoc(isrphrase->EndDoc);
+//    delete isrphrase;
+//    isrphrase = nullptr;
+// }
 
-ISRContainer *ISRHandler::OpenISRContainer( ISR **contained, ISR **excluded, unsigned int countContained, unsigned int countExcluded, IndexReadHandler *indexRead)
+ISRContainer *ISRHandler::OpenISRContainer( ISR **contained, ISR **excluded, unsigned int countContained, unsigned int countExcluded )
    {
    // excluded can have nullptr
    ISRContainer *isrcontainer = new ISRContainer;
@@ -117,13 +133,13 @@ ISRContainer *ISRHandler::OpenISRContainer( ISR **contained, ISR **excluded, uns
    isrcontainer -> Excluded = excluded;
    isrcontainer -> CountContained = countContained;
    isrcontainer -> CountExcluded = countExcluded;
-   isrcontainer -> EndDoc = OpenISREndDoc(indexRead);
+   isrcontainer -> EndDoc = OpenISREndDoc( );
    isrcontainer -> Seek(0);
    return isrcontainer;
    }
 
-void ISRHandler::CloseISRContainer( ISRContainer *isrcontainer ){
-   CloseISREndDoc(isrcontainer->EndDoc);
-   delete isrcontainer;
-   isrcontainer = nullptr;
-}
+// void ISRHandler::CloseISRContainer( ISRContainer *isrcontainer ){
+//    CloseISREndDoc(isrcontainer->EndDoc);
+//    delete isrcontainer;
+//    isrcontainer = nullptr;
+// }

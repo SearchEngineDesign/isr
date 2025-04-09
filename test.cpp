@@ -6,27 +6,26 @@
 #include <cstddef>
 
 int main() {
-  // 1. shallow copy
-  // 2. utf8 only 6 bytes
-  // 3. how to find title (decoration?)
-  // 4. seg fault
 
-   // TODO: 1. modify isr.cpp (to serial)
-   // 2. Read Utf8 with deco
-   // 3. test
+   // read index chunk
 
    IndexReadHandler readHandler = IndexReadHandler();
    readHandler.ReadIndex("../log/chunks/1");
 
-   // How to define ISRWord
+   // initialize ISRHandler
 
    ISRHandler isrHandler;
-   char word1[] = "motherfucking";
-   ISRWord *isrWord1 = isrHandler.OpenISRWord(word1, &readHandler);
+   isrHandler.SetIndexReadHandler(&readHandler);
+
+   // How to define ISRWord
+
+   char word1[] = "wiki";
+   ISRWord *isrWord1 = isrHandler.OpenISRWord(word1);
    
-   if (isrWord1 == nullptr)
-      isrHandler.CloseISRWord(isrWord1);
+   if (isrWord1 == nullptr) {
+      isrHandler.CloseISR(isrWord1);
       return 0;
+   }
 
    // How to use ISRWord.Seek
 
@@ -44,18 +43,18 @@ int main() {
    }
 
    // Close
-   isrHandler.CloseISRWord(isrWord1);
+   isrHandler.CloseISR(isrWord1);
    return 0;
 
    // char word2[] = "features";
-   // ISRWord *isrWord2 = isrHandler.OpenISRWord(word2, &readHandler);
+   // ISRWord *isrWord2 = isrHandler.OpenISRWord(word2);
 
 
    // // How to use ISRAnd/ISROr/ISRPhrase
    // ISR **terms = new ISR *[2];
    // terms[0] = isrWord1;
    // terms[1] = isrWord2;
-   // ISRAnd *isr = isrHandler.OpenISRAnd( terms, 2, &readHandler);
+   // ISRAnd *isr = isrHandler.OpenISRAnd( terms, 2);
 
    // int i = 0;
    // size_t target = 0;
@@ -74,10 +73,10 @@ int main() {
 
    // // How to use ISRContainer
    // char word3[] = "motherfucking";
-   // ISRWord *isrWord3 = isrHandler.OpenISRWord(word3, &readHandler);
+   // ISRWord *isrWord3 = isrHandler.OpenISRWord(word3);
    
    // char word4[] = "teachers";
-   // ISRWord *isrWord4 = isrHandler.OpenISRWord(word4, &readHandler);
+   // ISRWord *isrWord4 = isrHandler.OpenISRWord(word4);
 
    // // contained word should not be nullptr
    // if (isrWord1 == nullptr || isrWord2 == nullptr)
@@ -91,7 +90,7 @@ int main() {
    // excluded[0] = isrWord3;
    // excluded[1] = isrWord4;
 
-   // ISRContainer *isr = isrHandler.OpenISRContainer(contained,excluded, 2, 2, &readHandler);
+   // ISRContainer *isr = isrHandler.OpenISRContainer(contained,excluded, 2, 2);
 
    // int i = 0;
    // size_t target = 0;
