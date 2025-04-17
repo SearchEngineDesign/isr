@@ -1,6 +1,7 @@
 #include "isrHandler.h"
 #include "isr.h"
 #include "../utils/IndexBlob.h"
+#include <cstddef>
 
 void ISRHandler::SetIndexReadHandler( IndexReadHandler *iRead ) 
    {
@@ -50,6 +51,9 @@ ISRWord *ISRHandler::OpenISRWord( char *word )
 
    isrWord->EndDoc = OpenISREndDoc( );
 
+   if ( isrWord->EndDoc == nullptr )
+      return nullptr;  
+
    isrWord->Seek(0); // seek to the first occurrence
 
    return isrWord;
@@ -80,6 +84,8 @@ ISROr *ISRHandler::OpenISROr( ISR **terms, unsigned int NumberOfTerms )
    isrOr->Terms = terms;
    isrOr->NumberOfTerms = NumberOfTerms;
    isrOr->EndDoc = OpenISREndDoc( );
+   if ( isrOr->EndDoc == nullptr )
+      return nullptr; 
    isrOr->Seek(0);
    return isrOr;
    }
@@ -98,6 +104,8 @@ ISRAnd *ISRHandler::OpenISRAnd( ISR **terms, unsigned int NumberOfTerms )
    isrAnd->Terms = terms;
    isrAnd->NumberOfTerms = NumberOfTerms;
    isrAnd->EndDoc = OpenISREndDoc( );
+   if ( isrAnd->EndDoc == nullptr )
+      return nullptr;
    isrAnd->Seek(0);
    return isrAnd;
    }
@@ -115,6 +123,8 @@ ISRPhrase *ISRHandler::OpenISRPhrase( ISR **terms, unsigned int NumberOfTerms )
    isrPhrase->Terms = terms;
    isrPhrase->NumberOfTerms = NumberOfTerms;
    isrPhrase->EndDoc = OpenISREndDoc( );
+   if ( isrPhrase->EndDoc == nullptr )
+      return nullptr;
    isrPhrase->Seek(0);
    return isrPhrase;
    }
@@ -134,6 +144,8 @@ ISRContainer *ISRHandler::OpenISRContainer( ISR **contained, ISR **excluded, uns
    isrcontainer -> CountContained = countContained;
    isrcontainer -> CountExcluded = countExcluded;
    isrcontainer -> EndDoc = OpenISREndDoc( );
+   if ( isrcontainer->EndDoc == nullptr )
+      return nullptr;
    isrcontainer -> Seek(0);
    return isrcontainer;
    }

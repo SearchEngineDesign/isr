@@ -50,7 +50,7 @@ void ISR::SetPostingList( const SerialPostingList *pl )
 const SerialPost *ISRWord::Next( )
    {
    // do a next on the term, then return match
-   return curr ++;
+   return Seek( start + 1 );  
    }
 
 const SerialPost *ISRWord::Seek ( Location target )
@@ -107,8 +107,8 @@ const SerialPost *ISRWord::Seek ( Location target )
    // TODO: update end(?)
 
    // update end of document
-   // std::cout << "doc end start loc: " << DocumentEnd->GetStartLocation() << std::endl;
-   if ( actualLocation > EndDoc  ->GetStartLocation( ) ) {
+   // std::cout << "doc end start loc: " << EndDoc->GetStartLocation() << std::endl;
+   if ( actualLocation > EndDoc->GetStartLocation( ) || actualLocation < EndDoc->GetStartLocation() - EndDoc->GetDocumentLength() ) {
       // std::cout << "docend seek\n";
       EndDoc->Seek( actualLocation );
    }
