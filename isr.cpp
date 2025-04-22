@@ -491,15 +491,18 @@ const SerialPost *ISROr::Seek( Location target )
 
       for ( int i = 0; i < NumberOfTerms; i ++ )
          {
-         const SerialPost *result = Terms[ i ] -> Seek(target);
-         if ( result )
+         if ( Terms[ i ] != nullptr ) 
             {
-            flag = true;
-            Location loc = Terms[ i ]->GetStartLocation();
-            if ( loc <= nearestStartLocation )
+            const SerialPost *result = Terms[ i ] -> Seek(target);
+            if ( result )
                {
-               nearestTerm = i;
-               nearestStartLocation = loc;
+               flag = true;
+               Location loc = Terms[ i ]->GetStartLocation();
+               if ( loc <= nearestStartLocation )
+                  {
+                  nearestTerm = i;
+                  nearestStartLocation = loc;
+                  }
                }
             }
          }
