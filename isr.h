@@ -1,8 +1,10 @@
 #pragma once
 #include "../index/index.h"
-#include "../utils/IndexBlob.h"
+#include <cf/IndexBlob.h>
 
 class ISREndDoc;
+
+
 
 class ISR
 {
