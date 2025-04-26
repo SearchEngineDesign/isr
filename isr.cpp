@@ -82,13 +82,14 @@ const SerialPost *ISRWord::Seek ( Location target )
       {
       if ( offset + 1 < postingList->posts ) // TODO: check
          {
-         // std::cout << "data 1: " << offset + 1 << std::endl;
-         const SerialPost *data = postingList->getPost(offset+1);
-         // std::cout << "data: " << offset + 1 << std::endl;
-         actualLocation += GetCustomUtf8(reinterpret_cast<const Utf8 *>(data));
-         // actualLocation += GetCustomUtf8((*list)[offset+1].getData()); // TODO: unsigned char* and char*
-         offset ++;
-         // std::cout << "in loop: offset: " << offset <<  " actual loc: " << actualLocation << std::endl;
+            const SerialPost *data = postingList->getPost(offset+1);
+            try {
+               actualLocation += GetCustomUtf8(reinterpret_cast<const Utf8 *>(data));
+               offset ++;
+            } catch (std::runtime_error &e) {
+               return nullptr;
+            }
+         
          }
       else
          {
@@ -182,12 +183,16 @@ const SerialPost *ISREndDoc::Seek ( Location target )
       {
       if ( offset + 1 < postingList->posts )
          {
-         // actualLocation += GetCustomUtf8((*list)[offset+1].getData());
-         size_t delta = GetCustomUtf8(reinterpret_cast<const Utf8*>(postingList->getPost(offset+1)));
-         SetDocumentLength(delta);
-         actualLocation += delta;
-         offset ++;
-         matchingDocument = offset; // set doc id of this document
+            // actualLocation += GetCustomUtf8((*list)[offset+1].getData());
+            try {
+               size_t delta = GetCustomUtf8(reinterpret_cast<const Utf8*>(postingList->getPost(offset+1)));
+               SetDocumentLength(delta);
+               actualLocation += delta;
+               offset ++;
+               matchingDocument = offset; // set doc id of this document
+            } catch (std::runtime_error &e) {
+               return nullptr;
+            }
          }
       else
          return nullptr;
