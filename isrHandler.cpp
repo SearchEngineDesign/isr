@@ -1,6 +1,6 @@
 #include "isrHandler.h"
 #include "isr.h"
-#include "../utils/IndexBlob.h"
+#include <cf/IndexBlob.h>
 #include <cstddef>
 
 void ISRHandler::SetIndexReadHandler( IndexReadHandler *iRead ) 
