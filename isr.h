@@ -73,7 +73,10 @@ private:
 class ISRWord : public ISR
 {
 public:
-   ~ISRWord() {std::cout << "word destructor\n";}
+   ~ISRWord() {
+      std::cout << "word destructor\n";
+      delete EndDoc;
+   }
 
    const SerialPost *Next(); // -> 
    const SerialPost *NextDocument(); // -> return 
@@ -86,7 +89,16 @@ public:
 class ISROr : public ISR
 {
 public:
-   ~ISROr() {std::cout << "or destructor\n";}
+   ~ISROr() {
+      std::cout << "or destructor\n";
+      for (int i = 0; i < NumberOfTerms; i ++) {
+         if (Terms[i] != nullptr)
+            delete Terms[i];
+      }
+      delete [] Terms;
+
+      delete EndDoc;
+   }
 
    ISR **Terms;
    unsigned int NumberOfTerms;
@@ -106,7 +118,16 @@ private:
 class ISRAnd : public ISR
 {
 public:
-   ~ISRAnd() {std::cout << "and destructor\n";}
+   ~ISRAnd() {
+      std::cout << "and destructor\n";
+      for (int i = 0; i < NumberOfTerms; i ++) {
+         if (Terms[i] != nullptr)
+            delete Terms[i];
+      }
+      delete [] Terms;
+
+      delete EndDoc;
+   }
 
    ISR **Terms;
    unsigned int NumberOfTerms;
@@ -123,7 +144,16 @@ private:
 class ISRPhrase : public ISR
 {
 public:
-   ~ISRPhrase(){std::cout << "phrase destructor\n";}
+   ~ISRPhrase(){
+      std::cout << "phrase destructor\n";
+      for (int i = 0; i < NumberOfTerms; i ++) {
+         if (Terms[i] != nullptr)
+            delete Terms[i];
+      }
+      delete [] Terms;
+
+      delete EndDoc;
+   }
 
    ISR **Terms;
    unsigned int NumberOfTerms;
@@ -143,7 +173,21 @@ class ISRContainer : public ISR
 public:
 
    // ISRContainer( unsigned int countContained, unsigned int countExcluded );  // TODO: think about init
-   ~ISRContainer( ) {std::cout << "container destructor\n";}
+   ~ISRContainer( ) {
+      std::cout << "container destructor\n";
+      for (int i = 0; i < CountContained; i ++) {
+         if (Contained[i] != nullptr)
+            delete Contained[i];
+      }
+      for (int i = 0; i < CountExcluded; i ++) {
+         if (Excluded[i] != nullptr)
+            delete Excluded[i];
+      }
+      delete [] Contained;
+      delete [] Excluded;
+
+      delete EndDoc;
+   }
 
    // Location Next( );
    const SerialPost *Seek( Location target );
