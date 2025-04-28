@@ -3,7 +3,7 @@
 #include <cf/IndexBlob.h>
 #include <cstddef>
 
-void ISRHandler::SetIndexReadHandler( IndexReadHandler *iRead ) 
+void ISRHandler::SetIndexReadHandlerPtr( IndexReadHandler *iRead ) 
    {
    indexRead = iRead;
    }
