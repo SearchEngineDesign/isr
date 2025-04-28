@@ -7,7 +7,7 @@ class ISRHandler {
 
 public:
 
-   void SetIndexReadHandler(IndexReadHandler *iRead);
+   void SetIndexReadHandlerPtr(IndexReadHandler *iRead);
 
    // open ISREndDoc
    ISREndDoc *OpenISREndDoc( );
